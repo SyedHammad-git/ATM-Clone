@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXBANK ATM — Elite Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617;
+            --atm-outer: #0c1221;
+            --atm-inner: #111827;
+            --screen-bg: #040810;
+            --primary: #2563eb;
+            --primary-glow: rgba(37, 99, 235, 0.4);
+            --accent: #facc15;
+            --accent-glow: rgba(250, 204, 21, 0.3);
+            --text: #e2e8f0;
+            --text-dim: #64748b;
+            --text-mid: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --glass: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.07);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Exo 2', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient light */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 60% at 30% 50%, rgba(37,99,235,0.07) 0%, transparent 100%),
+                radial-gradient(ellipse 50% 50% at 70% 40%, rgba(250,204,21,0.04) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            width: 2px; height: 2px;
+            background: rgba(37,99,235,0.5);
+            border-radius: 50%;
+            animation: float-particle linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float-particle {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) translateX(30px); opacity: 0; }
+        }
+
+        /* ===== ATM MACHINE ===== */
+        .atm-machine {
+            width: 500px;
+            background: linear-gradient(160deg, #1a2035 0%, #0c1221 35%, #111827 70%, #0d1117 100%);
+            border-radius: 28px;
+            padding: 28px 22px 22px;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.06),
+                0 0 0 2px rgba(0,0,0,0.8),
+                0 60px 120px rgba(0,0,0,0.9),
+                0 0 80px rgba(37,99,235,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.08),
+                inset 0 -1px 0 rgba(0,0,0,0.5);
+            position: relative;
+            user-select: none;
+        }
+
+        /* Screw details */
+        .atm-machine::before, .atm-machine::after {
+            content: '';
+            position: absolute;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1e293b, #0d1117);
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+        }
+        .atm-machine::before { top: 14px; left: 14px; }
+        .atm-machine::after { top: 14px; right: 14px; }
+
+        /* ===== HEADER ===== */
+        .atm-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding: 0 4px;
+        }
+
+        .bank-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 19px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #facc15 0%, #fbbf24 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bank-logo em {
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-style: normal;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .atm-camera {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #0f172a, #1e293b);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 0 6px rgba(0,0,0,0.9), 0 0 4px rgba(37,99,235,0.2);
+            position: relative;
+        }
+        .atm-camera::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: rgba(37,99,235,0.4);
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 99px;
+            padding: 3px 10px;
+        }
+
+        .status-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 6px var(--success);
+            animation: pulse-dot 2.5s ease infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .status-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 8px;
+            color: var(--success);
+            letter-spacing: 1.5px;
+        }
+
+        /* ===== SCREEN AREA ===== */
+        .screen-area {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        /* Side button rails */
+        .side-rail {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 6px 0;
+            gap: 10px;
+        }
+
+        .fn-btn {
+            width: 16px;
+            height: 34px;
+            background: linear-gradient(180deg, #1e2d42 0%, #0f1924 100%);
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer;
+            transition: all 0.12s ease;
+            box-shadow:
+                2px 0 6px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.04),
+                inset 0 -1px 0 rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .fn-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%; right: -6px;
+            transform: translateY(-50%);
+            width: 5px; height: 2px;
+            background: rgba(37,99,235,0.3);
+            border-radius: 1px;
+        }
+
+        .side-rail.right .fn-btn::before {
+            right: auto; left: -6px;
+        }
+
+        .fn-btn:hover {
+            background: linear-gradient(180deg, rgba(37,99,235,0.4) 0%, rgba(29,78,216,0.4) 100%);
+            border-color: rgba(37,99,235,0.4);
+            box-shadow: 0 0 14px rgba(37,99,235,0.25);
+        }
+
+        .fn-btn:active { transform: scaleX(0.9); }
+
+        /* ===== MAIN SCREEN ===== */
+        .atm-screen {
+            flex: 1;
+            height: 340px;
+            background: var(--screen-bg);
+            border-radius: 14px;
+            border: 2px solid rgba(37,99,235,0.25);
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.8),
+                0 0 40px rgba(37,99,235,0.12),
+                inset 0 0 60px rgba(0,0,0,0.9),
+                inset 0 0 1px rgba(255,255,255,0.04);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scanlines */
+        .atm-screen::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(0,0,0,0.04) 3px,
+                rgba(0,0,0,0.04) 4px
+            );
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        /* Glass sheen */
+        .atm-screen::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 35%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%);
+            border-radius: 14px 14px 0 0;
+            pointer-events: none;
+            z-index: 199;
+        }
+
+        /* Subtle grid on screen */
+        .screen-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(37,99,235,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37,99,235,0.025) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ===== SCREEN PAGES ===== */
+        .screen-page {
+            position: absolute; inset: 0;
+            display: none;
+            flex-direction: column;
+            padding: 22px 20px;
+            z-index: 10;
+        }
+
+        .screen-page.active {
+            display: flex;
+            animation: page-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes page-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== OVERLAYS ===== */
+        .session-timer-badge {
+            position: absolute;
+            bottom: 10px; right: 12px;
+            font-family: 'Orbitron', monospace;
+            font-size: 9px;
+            color: var(--text-dim);
+            z-index: 150;
+            display: none;
+        }
+
+        .currency-toggle-btn {
+            position: absolute;
+            top: 10px; right: 10px;
+            background: rgba(250,204,21,0.08);
+            border: 1px solid rgba(250,204,21,0.2);
+            border-radius: 99px;
+            padding: 3px 9px;
+            font-family: 'Orbitron', monospace;
+            font-size: 8px;
+            color: var(--accent);
+            cursor: pointer;
+            z-index: 150;
+            display: none;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+        .currency-toggle-btn:hover {
+            background: rgba(250,204,21,0.15);
+        }
+
+        .timeout-overlay {
+            position: absolute; inset: 0;
+            background: rgba(2,6,23,0.92);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 500;
+        }
+        .timeout-overlay.show { display: flex; }
+
+        .timeout-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: var(--error);
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .timeout-count {
+            font-family: 'Orbitron', monospace;
+            font-size: 56px;
+            font-weight: 900;
+            color: var(--text);
+            line-height: 1;
+            margin-bottom: 18px;
+            text-shadow: 0 0 30px rgba(239,68,68,0.4);
+        }
+
+        /* ===== PAGE: WELCOME ===== */
+        .welcome-page {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .welcome-time {
+            font-family: 'Orbitron', monospace;
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+            margin-bottom: 4px;
+            text-shadow: 0 0 30px rgba(37,99,235,0.4);
+        }
+
+        .welcome-date {
+            font-size: 10px;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .card-visual {
+            width: 88px; height: 58px;
+            background: linear-gradient(135deg, #d4a017 0%, #facc15 40%, #f59e0b 100%);
+            border-radius: 8px;
+            margin: 0 auto 16px;
+            position: relative;
+            box-shadow: 0 8px 24px rgba(250,204,21,0.25), 0 0 0 1px rgba(255,255,255,0.1);
+            animation: card-float 3.5s ease-in-out infinite;
+        }
+
+        @keyframes card-float {
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50%       { transform: translateY(-10px) rotate(3deg); }
+        }
+
+        .card-chip {
+            position: absolute;
+            top: 14px; left: 14px;
+            width: 22px; height: 17px;
+            background: linear-gradient(135deg, #b8860b, #daa520);
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .card-chip::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            height: 1px;
+            background: rgba(0,0,0,0.2);
+        }
+        .card-chip::after {
+            content: '';
+            position: absolute;
+            left: 50%; top: 0; bottom: 0;
+            width: 1px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .card-logo {
+            position: absolute;
+            top: 12px; right: 10px;
+            font-size: 9px;
+            font-family: 'Orbitron', monospace;
+            color: rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .card-num-mock {
+            position: absolute;
+            bottom: 11px; left: 12px;
+            font-family: 'Orbitron', monospace;
+            font-size: 7px;
+            color: rgba(0,0,0,0.35);
+            letter-spacing: 1.5px;
+        }
+
+        .card-wave {
+            position: absolute;
+            right: 10px; bottom: 10px;
+            font-size: 12px;
+            opacity: 0.4;
+        }
+
+        .tap-prompt {
+            font-size: 11px;
+            color: var(--accent);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            animation: blink 1.8s ease infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.25; }
+        }
+
+        .atm-location {
+            font-family: 'Orbitron', monospace;
+            font-size: 8px;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+            margin-top: 18px;
+        }
+
+        /* ===== PAGE: BIOMETRIC ===== */
+        .bio-page {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .bio-outer-ring {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            border: 1px solid rgba(37,99,235,0.2);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+            position: relative;
+            animation: bio-pulse 2.5s ease infinite;
+        }
+
+        @keyframes bio-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.2); }
+            50%       { box-shadow: 0 0 40px rgba(37,99,235,0.35); border-color: rgba(37,99,235,0.5); }
+        }
+
+        .bio-outer-ring::before {
+            content: '';
+            position: absolute; inset: -8px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--primary);
+            border-right: 2px solid var(--primary);
+            animation: spin 1.2s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .bio-inner {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: rgba(37,99,235,0.08);
+            border: 1px solid rgba(37,99,235,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+        }
+
+        .bio-status {
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: var(--primary);
+            letter-spacing: 2px;
+        }
+
+        /* ===== PAGE: PIN ===== */
+        .pin-page {
+            align-items: center;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-title::before {
+            content: '';
+            display: block;
+            width: 3px; height: 10px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .pin-dots-row {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .pin-dot {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+            background: transparent;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .pin-dot.filled {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 14px var(--accent-glow);
+            transform: scale(1.1);
+        }
+
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+
+        .key {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 11px 4px;
+            color: var(--text);
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.12s ease;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            letter-spacing: 0;
+        }
+
+        .key:hover {
+            background: rgba(37,99,235,0.18);
+            border-color: rgba(37,99,235,0.4);
+            box-shadow: 0 0 18px rgba(37,99,235,0.18);
+        }
+
+        .key:active {
+            transform: scale(0.91);
+            background: rgba(37,99,235,0.3);
+        }
+
+        .key.key-clr {
+            color: var(--error);
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .key.key-ok {
+            color: var(--success);
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .shake { animation: shake 0.45s ease; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            15%  { transform: translateX(-12px); }
+            30%  { transform: translateX(12px); }
+            45%  { transform: translateX(-9px); }
+            60%  { transform: translateX(9px); }
+            75%  { transform: translateX(-5px); }
+            90%  { transform: translateX(5px); }
+        }
+
+        .error-text {
+            font-size: 10px;
+            color: var(--error);
+            text-align: center;
+            min-height: 16px;
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== PAGE: LOADING ===== */
+        .loading-page {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .loader-ring {
+            width: 56px; height: 56px;
+            border: 3px solid rgba(37,99,235,0.15);
+            border-top: 3px solid var(--primary);
+            border-right: 3px solid rgba(37,99,235,0.4);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 24px var(--primary-glow);
+        }
+
+        .loader-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 9px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            margin-bottom: 18px;
+        }
+
+        .load-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            text-align: left;
+        }
+
+        .load-step {
+            font-size: 10px;
+            color: var(--text-dim);
+            opacity: 0;
+            transition: opacity 0.4s ease, color 0.4s ease;
+            letter-spacing: 0.5px;
+        }
+        .load-step.done { opacity: 1; color: var(--success); }
+
+        /* ===== PAGE: DASHBOARD ===== */
+        .dashboard-page { }
+
+        .balance-card {
+            background: linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.04) 100%);
+            border: 1px solid rgba(37,99,235,0.25);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: rgba(37,99,235,0.06);
+        }
+
+        .balance-card::after {
+            content: '';
+            position: absolute;
+            bottom: -10px; left: -10px;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: rgba(250,204,21,0.03);
+        }
+
+        .bal-label {
+            font-size: 9px;
+            color: var(--text-dim);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .bal-amount {
+            font-family: 'Orbitron', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .bal-currency {
+            font-size: 13px;
+            color: var(--accent);
+            margin-right: 6px;
+            font-weight: 400;
+        }
+
+        .bal-account {
+            font-size: 9px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            letter-spacing: 1.5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .menu-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .menu-btn:hover {
+            background: rgba(37,99,235,0.1);
+            border-color: rgba(37,99,235,0.35);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(37,99,235,0.12);
+        }
+
+        .menu-btn:active { transform: scale(0.97) translateY(0); }
+
+        .menu-icon { font-size: 20px; margin-bottom: 6px; }
+        .menu-label {
+            font-size: 9px;
+            color: var(--text-mid);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* ===== TXN PAGES ===== */
+        .txn-page { }
+
+        .presets-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .preset {
+            flex: 1;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 9px 4px;
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .preset:hover, .preset.sel {
+            background: rgba(37,99,235,0.18);
+            border-color: rgba(37,99,235,0.5);
+            color: var(--accent);
+        }
+
+        .field-label {
+            font-size: 9px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .field-input {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            width: 100%;
+            outline: none;
+            margin-bottom: 10px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field-input:focus {
+            border-color: rgba(37,99,235,0.6);
+            box-shadow: 0 0 14px rgba(37,99,235,0.15);
+        }
+
+        .field-input::placeholder { color: var(--text-dim); font-size: 11px; }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            border-radius: 8px;
+            padding: 11px;
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 22px var(--primary-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-secondary {
+            flex: 1;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 11px;
+            color: var(--text-dim);
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+        .btn-danger {
+            flex: 1;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px;
+            padding: 11px;
+            color: var(--error);
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* ===== CONFIRM SCREEN ===== */
+        .txn-confirm-box {
+            background: rgba(37,99,235,0.06);
+            border: 1px solid rgba(37,99,235,0.2);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-dim);
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .confirm-row:last-child { border-bottom: none; }
+
+        .confirm-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: var(--text);
+        }
+
+        /* ===== PROCESSING SCREEN ===== */
+        .proc-page {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .proc-ring {
+            width: 56px; height: 56px;
+            border: 3px solid rgba(250,204,21,0.15);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 18px;
+            box-shadow: 0 0 24px var(--accent-glow);
+        }
+
+        .proc-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: var(--text-mid);
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .prog-wrap {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .prog-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 99px;
+            width: 0%;
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: width 0.15s ease;
+        }
+
+        .proc-sub {
+            font-size: 9px;
+            color: var(--text-dim);
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== SUCCESS SCREEN ===== */
+        .success-page {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .check-ring {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: rgba(16,185,129,0.1);
+            border: 2px solid var(--success);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px;
+            font-size: 28px;
+            box-shadow: 0 0 30px rgba(16,185,129,0.25);
+            animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes pop-in {
+            from { transform: scale(0); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+
+        .receipt-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .rcpt-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-dim);
+            padding: 3.5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .rcpt-row:last-child { border-bottom: none; }
+
+        .rcpt-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 9px;
+            color: var(--text);
+        }
+
+        /* ===== BALANCE SCREEN ===== */
+        .bal-detail-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .bal-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-dim);
+            padding: 4px 0;
+        }
+
+        .bal-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            color: var(--text);
+        }
+
+        .mini-stmt {
+            overflow-y: auto;
+            max-height: 90px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .stmt-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-dim);
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .stmt-item:last-child { border-bottom: none; }
+        .credit { color: var(--success) !important; }
+        .debit  { color: var(--error) !important; }
+
+        /* ===== BOTTOM BAR ===== */
+        .atm-bottom {
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slot-tag {
+            font-size: 7px;
+            color: var(--text-dim);
+            letter-spacing: 1.5px;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+
+        .card-slot-bar {
+            flex: 1;
+            height: 7px;
+            background: #060d18;
+            border-radius: 3px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-slot-bar::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(37,99,235,0.25), transparent);
+            animation: scan-light 3s ease-in-out infinite;
+        }
+
+        @keyframes scan-light {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        .cash-dispenser {
+            width: 76px; height: 11px;
+            background: #060d18;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cash-dispenser::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(16,185,129,0.12), transparent);
+            animation: scan-light 2.5s ease-in-out infinite 0.5s;
+        }
+
+        .security-strip {
+            margin-top: 12px;
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 7px;
+            color: rgba(37,99,235,0.35);
+            letter-spacing: 2.5px;
+        }
+
+        /* ===== HELPERS ===== */
+        .info-note {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+<!-- Floating particles -->
+<script>
+    for (let i = 0; i < 12; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.animationDuration = (6 + Math.random() * 10) + 's';
+        p.style.animationDelay = (-Math.random() * 10) + 's';
+        p.style.opacity = Math.random() * 0.6;
+        document.body.appendChild(p);
+    }
+</script>
+
+<!-- ATM Machine -->
+<div class="atm-machine">
+
+    <!-- Header -->
+    <div class="atm-header">
+        <div class="bank-logo">NEX<em>BANK</em></div>
+        <div class="header-center">
+            <div class="atm-camera"></div>
+            <div class="status-pill">
+                <div class="status-dot"></div>
+                <span class="status-text">SECURE</span>
+            </div>
+        </div>
+        <div style="width:80px;text-align:right;">
+            <span style="font-family:'Orbitron',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;">ATM-FSB-04</span>
+        </div>
+    </div>
+
+    <!-- Screen + Side Rails -->
+    <div class="screen-area">
+
+        <!-- Left Rail -->
+        <div class="side-rail left">
+            <div class="fn-btn" onclick="sideBtn('l0')"></div>
+            <div class="fn-btn" onclick="sideBtn('l1')"></div>
+            <div class="fn-btn" onclick="sideBtn('l2')"></div>
+            <div class="fn-btn" onclick="sideBtn('l3')"></div>
+        </div>
+
+        <!-- MAIN SCREEN -->
+        <div class="atm-screen" id="atmScreen">
+            <div class="screen-grid"></div>
+
+            <!-- Overlays -->
+            <div class="timeout-overlay" id="timeoutOverlay">
+                <div class="timeout-label">⚠ SESSION TIMEOUT</div>
+                <div class="timeout-count" id="timeoutCount">10</div>
+                <button class="btn-primary" style="width:120px;" onclick="dismissTimeout()">CONTINUE</button>
+            </div>
+
+            <div class="currency-toggle-btn" id="currToggle" onclick="toggleCurrency()">PKR ⇄ USD</div>
+            <div class="session-timer-badge" id="sessionBadge">⏱ 60s</div>
+
+            <!-- ── P1: WELCOME ── -->
+            <div class="screen-page welcome-page active" id="pg-welcome" onclick="onCardInsert()">
+                <div class="welcome-time" id="clockEl">00:00</div>
+                <div class="welcome-date" id="dateEl">--</div>
+                <div class="card-visual">
+                    <div class="card-chip"></div>
+                    <div class="card-logo">NEXBANK</div>
+                    <div class="card-num-mock">•••• •••• •••• 4291</div>
+                    <div class="card-wave">((•))</div>
+                </div>
+                <div class="tap-prompt">▶ INSERT CARD</div>
+                <div class="atm-location">NEXBANK ATM · FAISALABAD, PK</div>
+            </div>
+
+            <!-- ── P2: BIOMETRIC ── -->
+            <div class="screen-page bio-page" id="pg-bio">
+                <div class="page-title">BIOMETRIC VERIFY</div>
+                <div class="bio-outer-ring">
+                    <div class="bio-inner">🫆</div>
+                </div>
+                <div class="bio-status" id="bioStatus">SCANNING FINGERPRINT...</div>
+                <div class="info-note" style="margin-top:8px;">Place registered finger on sensor</div>
+            </div>
+
+            <!-- ── P3: PIN ENTRY ── -->
+            <div class="screen-page pin-page" id="pg-pin">
+                <div class="page-title">ENTER SECRET PIN</div>
+                <div class="pin-dots-row">
+                    <div class="pin-dot" id="pd0"></div>
+                    <div class="pin-dot" id="pd1"></div>
+                    <div class="pin-dot" id="pd2"></div>
+                    <div class="pin-dot" id="pd3"></div>
+                </div>
+                <div class="keypad-grid" id="keypadEl">
+                    <div class="key" onclick="pinKey('1')">1</div>
+                    <div class="key" onclick="pinKey('2')">2</div>
+                    <div class="key" onclick="pinKey('3')">3</div>
+                    <div class="key" onclick="pinKey('4')">4</div>
+                    <div class="key" onclick="pinKey('5')">5</div>
+                    <div class="key" onclick="pinKey('6')">6</div>
+                    <div class="key" onclick="pinKey('7')">7</div>
+                    <div class="key" onclick="pinKey('8')">8</div>
+                    <div class="key" onclick="pinKey('9')">9</div>
+                    <div class="key key-clr" onclick="pinBackspace()">⌫ CLR</div>
+                    <div class="key" onclick="pinKey('0')">0</div>
+                    <div class="key key-ok"  onclick="pinConfirm()">✓ OK</div>
+                </div>
+                <div class="error-text" id="pinError"></div>
+            </div>
+
+            <!-- ── P4: LOADING (Auth) ── -->
+            <div class="screen-page loading-page" id="pg-loading">
+                <div class="loader-ring"></div>
+                <div class="loader-label">CONNECTING TO BANK SERVER</div>
+                <div class="load-steps">
+                    <div class="load-step" id="ls0">✓ Card Verified</div>
+                    <div class="load-step" id="ls1">✓ PIN Authenticated</div>
+                    <div class="load-step" id="ls2">✓ Session Encrypted</div>
+                    <div class="load-step" id="ls3">✓ Account Loaded</div>
+                </div>
+            </div>
+
+            <!-- ── P5: DASHBOARD ── -->
+            <div class="screen-page dashboard-page" id="pg-dashboard">
+                <div class="balance-card">
+                    <div class="bal-label">AVAILABLE BALANCE</div>
+                    <div class="bal-amount">
+                        <span class="bal-currency" id="currSym">PKR</span><span id="balEl">0</span>
+                    </div>
+                    <div class="bal-account">ACCOUNT ·  •••• •••• 4291  ·  NEXBANK</div>
+                </div>
+                <div class="menu-grid">
+                    <div class="menu-btn" onclick="nav('pg-withdraw')">
+                        <div class="menu-icon">💵</div>
+                        <div class="menu-label">Withdraw</div>
+                    </div>
+                    <div class="menu-btn" onclick="nav('pg-deposit')">
+                        <div class="menu-icon">📥</div>
+                        <div class="menu-label">Deposit</div>
+                    </div>
+                    <div class="menu-btn" onclick="nav('pg-transfer')">
+                        <div class="menu-icon">🔄</div>
+                        <div class="menu-label">Transfer</div>
+                    </div>
+                    <div class="menu-btn" onclick="openBalance()">
+                        <div class="menu-icon">📊</div>
+                        <div class="menu-label">Statement</div>
+                    </div>
+                </div>
+                <div class="btn-row" style="margin-top:10px;">
+                    <button class="btn-danger" onclick="logout()">LOGOUT</button>
+                </div>
+            </div>
+
+            <!-- ── P6: WITHDRAW ── -->
+            <div class="screen-page txn-page" id="pg-withdraw">
+                <div class="page-title">CASH WITHDRAWAL</div>
+                <div class="presets-row">
+                    <div class="preset" onclick="setPreset(this,500)">500</div>
+                    <div class="preset" onclick="setPreset(this,1000)">1,000</div>
+                    <div class="preset" onclick="setPreset(this,5000)">5,000</div>
+                    <div class="preset" onclick="setPreset(this,10000)">10,000</div>
+                </div>
+                <div class="field-label">CUSTOM AMOUNT (PKR)</div>
+                <input class="field-input" id="wdAmt" type="number" placeholder="Enter amount..." oninput="clearPresets()">
+                <div class="error-text" id="wdErr"></div>
+                <div class="btn-row">
+                    <button class="btn-secondary" onclick="nav('pg-dashboard')">BACK</button>
+                    <button class="btn-primary" onclick="doWithdraw()">PROCEED</button>
+                </div>
+            </div>
+
+            <!-- ── P7: DEPOSIT ── -->
+            <div class="screen-page txn-page" id="pg-deposit">
+                <div class="page-title">CASH DEPOSIT</div>
+                <div class="field-label">DEPOSIT AMOUNT (PKR)</div>
+                <input class="field-input" id="dpAmt" type="number" placeholder="Enter amount...">
+                <div class="field-label">DESCRIPTION</div>
+                <input class="field-input" id="dpDesc" type="text" placeholder="Salary / Online transfer...">
+                <div class="error-text" id="dpErr"></div>
+                <div class="btn-row">
+                    <button class="btn-secondary" onclick="nav('pg-dashboard')">BACK</button>
+                    <button class="btn-primary" onclick="doDeposit()">DEPOSIT</button>
+                </div>
+            </div>
+
+            <!-- ── P8: TRANSFER ── -->
+            <div class="screen-page txn-page" id="pg-transfer">
+                <div class="page-title">FUND TRANSFER</div>
+                <div class="field-label">BENEFICIARY ACCOUNT</div>
+                <input class="field-input" id="tfAcc" type="text" placeholder="0000-0000000-0" maxlength="15">
+                <div class="field-label">TRANSFER AMOUNT (PKR)</div>
+                <input class="field-input" id="tfAmt" type="number" placeholder="Enter amount...">
+                <div class="error-text" id="tfErr"></div>
+                <div class="btn-row">
+                    <button class="btn-secondary" onclick="nav('pg-dashboard')">BACK</button>
+                    <button class="btn-primary" onclick="doTransferReview()">REVIEW</button>
+                </div>
+            </div>
+
+            <!-- ── P9: TRANSFER CONFIRM ── -->
+            <div class="screen-page txn-page" id="pg-confirm">
+                <div class="page-title">CONFIRM TRANSFER</div>
+                <div class="txn-confirm-box">
+                    <div class="confirm-row"><span>To Account</span><span class="confirm-val" id="cfAcc">--</span></div>
+                    <div class="confirm-row"><span>Amount</span><span class="confirm-val" id="cfAmt">--</span></div>
+                    <div class="confirm-row"><span>Date</span><span class="confirm-val" id="cfDate">--</span></div>
+                    <div class="confirm-row"><span>Bank Charges</span><span class="confirm-val">PKR 0</span></div>
+                    <div class="confirm-row"><span>Net Debit</span><span class="confirm-val" id="cfNet">--</span></div>
+                </div>
+                <div class="info-note">Confirm this transfer? Action cannot be undone.</div>
+                <div class="btn-row" style="margin-top:10px;">
+                    <button class="btn-secondary" onclick="nav('pg-transfer')">CANCEL</button>
+                    <button class="btn-primary"   onclick="doTransferConfirm()">CONFIRM</button>
+                </div>
+            </div>
+
+            <!-- ── P10: BALANCE/STATEMENT ── -->
+            <div class="screen-page txn-page" id="pg-balance">
+                <div class="page-title">ACCOUNT STATEMENT</div>
+                <div class="bal-detail-card">
+                    <div class="bal-row"><span>Available Balance</span><span class="bal-val" id="balDetailAvail">--</span></div>
+                    <div class="bal-row"><span>Ledger Balance</span><span class="bal-val" id="balDetailLedger">--</span></div>
+                    <div class="bal-row"><span>Currency</span><span class="bal-val" id="balDetailCurr">PKR</span></div>
+                    <div class="bal-row"><span>Account</span><span class="bal-val">••••4291</span></div>
+                </div>
+                <div class="page-title" style="font-size:8px;margin-bottom:6px;">LAST 5 TRANSACTIONS</div>
+                <div class="mini-stmt" id="miniStmt"></div>
+                <div class="btn-row" style="margin-top:auto;">
+                    <button class="btn-secondary" onclick="nav('pg-dashboard')">BACK</button>
+                </div>
+            </div>
+
+            <!-- ── P11: PROCESSING ── -->
+            <div class="screen-page proc-page" id="pg-processing">
+                <div class="proc-ring"></div>
+                <div class="proc-label" id="procLabel">PROCESSING...</div>
+                <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+                <div class="proc-sub" id="procSub">Please do not remove card</div>
+            </div>
+
+            <!-- ── P12: SUCCESS ── -->
+            <div class="screen-page success-page" id="pg-success">
+                <div class="check-ring">✓</div>
+                <div class="page-title" style="align-self:center;color:var(--success);margin-bottom:12px;">TRANSACTION COMPLETE</div>
+                <div class="receipt-box">
+                    <div class="rcpt-row"><span>Type</span><span class="rcpt-val" id="rcType">--</span></div>
+                    <div class="rcpt-row"><span>Amount</span><span class="rcpt-val" id="rcAmt">--</span></div>
+                    <div class="rcpt-row"><span>New Balance</span><span class="rcpt-val" id="rcBal">--</span></div>
+                    <div class="rcpt-row"><span>Ref No.</span><span class="rcpt-val" id="rcRef">--</span></div>
+                    <div class="rcpt-row"><span>Date / Time</span><span class="rcpt-val" id="rcTime">--</span></div>
+                </div>
+                <div class="btn-row" style="margin-top:12px;width:100%;">
+                    <button class="btn-secondary" style="font-size:9px;" onclick="nav('pg-dashboard')">MENU</button>
+                    <button class="btn-primary"   style="font-size:9px;" onclick="logout()">EXIT</button>
+                </div>
+            </div>
+
+        </div>
+        <!-- /SCREEN -->
+
+        <!-- Right Rail -->
+        <div class="side-rail right">
+            <div class="fn-btn" onclick="sideBtn('r0')"></div>
+            <div class="fn-btn" onclick="sideBtn('r1')"></div>
+            <div class="fn-btn" onclick="sideBtn('r2')"></div>
+            <div class="fn-btn" onclick="sideBtn('r3')"></div>
+        </div>
+
+    </div>
+    <!-- /screen-area -->
+
+    <!-- Bottom hardware bar -->
+    <div class="atm-bottom">
+        <span class="slot-tag">CARD ▶</span>
+        <div class="card-slot-bar"></div>
+        <div class="cash-dispenser"></div>
+        <span class="slot-tag">◀ CASH</span>
+    </div>
+
+    <div class="security-strip">🔒 256-BIT TLS · NEXBANK SECURE SESSION · PCI-DSS COMPLIANT</div>
+
+</div>
+<!-- /atm-machine -->
+
+<script>
+// ======================================================
+//  NEXBANK ATM — ELITE EDITION  |  Pure JS State Machine
+// ======================================================
+
+// ── STATE ──────────────────────────────────────────────
+const STATE = {
+    CORRECT_PIN : '1234',
+    balance     : 125000,
+    usdRate     : 278,
+    isUSD       : false,
+    loggedIn    : false,
+    pinBuffer   : '',
+    pendingTxn  : null,     // { type, amount, acc? }
+    transactions: [
+        { type:'CR', desc:'Salary Credit',    amount:50000, date:'Apr 28' },
+        { type:'DR', desc:'ATM Withdrawal',   amount:10000, date:'Apr 27' },
+        { type:'CR', desc:'Transfer Received',amount: 5000, date:'Apr 25' },
+        { type:'DR', desc:'Fund Transfer',    amount: 3000, date:'Apr 24' },
+        { type:'DR', desc:'ATM Withdrawal',   amount: 2000, date:'Apr 22' },
+    ],
+};
+
+let sessionTimer, sessionInterval;
+
+// ── CLOCK ──────────────────────────────────────────────
+function tickClock() {
+    const now = new Date();
+    const hh  = String(now.getHours()).padStart(2,'0');
+    const mm  = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('clockEl').textContent = hh + ':' + mm;
+
+    const DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const MONTHS= ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('dateEl').textContent =
+        DAYS[now.getDay()] + ' · ' + now.getDate() + ' ' + MONTHS[now.getMonth()] + ' ' + now.getFullYear();
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+// ── NAVIGATION ─────────────────────────────────────────
+function nav(pageId) {
+    document.querySelectorAll('.screen-page').forEach(p => p.classList.remove('active'));
+    const pg = document.getElementById(pageId);
+    if (pg) pg.classList.add('active');
+    resetSession();
+}
+
+// ── SESSION TIMER ──────────────────────────────────────
+function resetSession() {
+    if (!STATE.loggedIn) return;
+    clearTimeout(sessionTimer);
+    clearInterval(sessionInterval);
+
+    let secs = 60;
+    const badge = document.getElementById('sessionBadge');
+    badge.textContent = '⏱ ' + secs + 's';
+
+    sessionInterval = setInterval(() => {
+        secs--;
+        badge.textContent = '⏱ ' + secs + 's';
+    }, 1000);
+
+    sessionTimer = setTimeout(showTimeout, 60000);
+}
+
+let timeoutInterval;
+function showTimeout() {
+    clearInterval(sessionInterval);
+    const overlay = document.getElementById('timeoutOverlay');
+    overlay.classList.add('show');
+    let c = 10;
+    document.getElementById('timeoutCount').textContent = c;
+    timeoutInterval = setInterval(() => {
+        c--;
+        document.getElementById('timeoutCount').textContent = c;
+        if (c <= 0) { clearInterval(timeoutInterval); overlay.classList.remove('show'); logout(); }
+    }, 1000);
+}
+
+function dismissTimeout() {
+    clearInterval(timeoutInterval);
+    document.getElementById('timeoutOverlay').classList.remove('show');
+    resetSession();
+}
+
+// ── CARD INSERT ────────────────────────────────────────
+function onCardInsert() {
+    nav('pg-bio');
+    const statusEl = document.getElementById('bioStatus');
+    statusEl.textContent = 'SCANNING FINGERPRINT...';
+    statusEl.style.color = 'var(--primary)';
+    setTimeout(() => { statusEl.textContent = '✓ IDENTITY VERIFIED'; statusEl.style.color = 'var(--success)'; }, 1800);
+    setTimeout(() => { nav('pg-pin'); STATE.pinBuffer = ''; renderPinDots(); }, 2800);
+}
+
+// ── PIN ────────────────────────────────────────────────
+function renderPinDots() {
+    for (let i = 0; i < 4; i++) {
+        document.getElementById('pd' + i).classList.toggle('filled', i < STATE.pinBuffer.length);
+    }
+}
+
+function pinKey(k) {
+    if (STATE.pinBuffer.length >= 4) return;
+    STATE.pinBuffer += k;
+    renderPinDots();
+}
+
+function pinBackspace() {
+    STATE.pinBuffer = STATE.pinBuffer.slice(0, -1);
+    renderPinDots();
+    document.getElementById('pinError').textContent = '';
+}
+
+function pinConfirm() {
+    if (STATE.pinBuffer.length < 4) {
+        showPinErr('Enter 4-digit PIN');
+        return;
+    }
+    if (STATE.pinBuffer === STATE.CORRECT_PIN) {
+        document.getElementById('pinError').textContent = '';
+        nav('pg-loading');
+        runAuthSequence();
+    } else {
+        STATE.pinBuffer = '';
+        renderPinDots();
+        showPinErr('Incorrect PIN. Please try again.');
+        const kp = document.getElementById('keypadEl');
+        kp.classList.add('shake');
+        setTimeout(() => kp.classList.remove('shake'), 500);
+    }
+}
+
+function showPinErr(msg) {
+    const el = document.getElementById('pinError');
+    el.textContent = msg;
+    setTimeout(() => el.textContent = '', 3000);
+}
+
+// ── AUTH LOADING ───────────────────────────────────────
+function runAuthSequence() {
+    [0,1,2,3].forEach(i => document.getElementById('ls'+i).classList.remove('done'));
+
+    const delays = [400, 750, 1100, 1500];
+    delays.forEach((d, i) => {
+        setTimeout(() => document.getElementById('ls'+i).classList.add('done'), d);
+    });
+
+    setTimeout(() => {
+        STATE.loggedIn = true;
+        document.getElementById('currToggle').style.display = 'block';
+        document.getElementById('sessionBadge').style.display = 'block';
+        nav('pg-dashboard');
+        counterAnimate(document.getElementById('balEl'), 0, currentBalance(), 800);
+    }, 2200);
+}
+
+// ── CURRENCY ───────────────────────────────────────────
+function currentBalance() {
+    return STATE.isUSD ? Math.round(STATE.balance / STATE.usdRate) : STATE.balance;
+}
+
+function toggleCurrency() {
+    STATE.isUSD = !STATE.isUSD;
+    document.getElementById('currSym').textContent = STATE.isUSD ? 'USD' : 'PKR';
+    document.getElementById('currToggle').textContent = STATE.isUSD ? 'USD ⇄ PKR' : 'PKR ⇄ USD';
+    counterAnimate(document.getElementById('balEl'), 0, currentBalance(), 600);
+}
+
+function counterAnimate(el, from, to, duration) {
+    const start = performance.now();
+    function step(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = fmt(Math.round(from + (to - from) * ease));
+        if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function fmt(n) { return n.toLocaleString('en-PK'); }
+
+// ── WITHDRAW ───────────────────────────────────────────
+let activePreset = null;
+
+function setPreset(el, val) {
+    document.querySelectorAll('#pg-withdraw .preset').forEach(p => p.classList.remove('sel'));
+    el.classList.add('sel');
+    document.getElementById('wdAmt').value = val;
+    activePreset = val;
+}
+
+function clearPresets() {
+    document.querySelectorAll('#pg-withdraw .preset').forEach(p => p.classList.remove('sel'));
+    activePreset = null;
+}
+
+function doWithdraw() {
+    const amt = parseFloat(document.getElementById('wdAmt').value);
+    const err = document.getElementById('wdErr');
+
+    if (!amt || amt <= 0)       { err.textContent = 'Enter a valid amount'; return; }
+    if (amt % 500 !== 0)        { err.textContent = 'Must be a multiple of PKR 500'; return; }
+    if (amt > STATE.balance)    { err.textContent = 'Insufficient balance'; return; }
+
+    err.textContent = '';
+    STATE.pendingTxn = { type: 'WITHDRAWAL', amount: amt };
+    document.getElementById('wdAmt').value = '';
+    clearPresets();
+
+    runProcessing('DISPENSING CASH...', () => {
+        STATE.balance -= amt;
+        addTxn('DR', 'ATM Withdrawal', amt);
+        showSuccess('WITHDRAWAL', amt);
+    });
+}
+
+// ── DEPOSIT ────────────────────────────────────────────
+function doDeposit() {
+    const amt  = parseFloat(document.getElementById('dpAmt').value);
+    const desc = document.getElementById('dpDesc').value.trim() || 'Cash Deposit';
+    const err  = document.getElementById('dpErr');
+
+    if (!amt || amt <= 0) { err.textContent = 'Enter a valid amount'; return; }
+
+    err.textContent = '';
+    document.getElementById('dpAmt').value = '';
+    document.getElementById('dpDesc').value = '';
+
+    runProcessing('VERIFYING NOTES...', () => {
+        STATE.balance += amt;
+        addTxn('CR', desc, amt);
+        showSuccess('DEPOSIT', amt);
+    });
+}
+
+// ── TRANSFER ───────────────────────────────────────────
+function doTransferReview() {
+    const acc = document.getElementById('tfAcc').value.trim();
+    const amt = parseFloat(document.getElementById('tfAmt').value);
+    const err = document.getElementById('tfErr');
+
+    if (!acc || acc.length < 8)  { err.textContent = 'Enter a valid account number'; return; }
+    if (!amt || amt <= 0)         { err.textContent = 'Enter a valid amount'; return; }
+    if (amt > STATE.balance)      { err.textContent = 'Insufficient balance'; return; }
+
+    err.textContent = '';
+    STATE.pendingTxn = { type: 'TRANSFER', amount: amt, acc };
+
+    document.getElementById('cfAcc').textContent  = acc;
+    document.getElementById('cfAmt').textContent  = 'PKR ' + fmt(amt);
+    document.getElementById('cfNet').textContent  = 'PKR ' + fmt(amt);
+    document.getElementById('cfDate').textContent = new Date().toLocaleDateString('en-PK');
+
+    nav('pg-confirm');
+}
+
+function doTransferConfirm() {
+    const { amount, acc } = STATE.pendingTxn;
+    document.getElementById('tfAcc').value = '';
+    document.getElementById('tfAmt').value = '';
+    STATE.pendingTxn = null;
+
+    runProcessing('TRANSFERRING FUNDS...', () => {
+        STATE.balance -= amount;
+        addTxn('DR', 'Fund Transfer → ' + acc.slice(-4), amount);
+        showSuccess('TRANSFER', amount);
+    });
+}
+
+// ── BALANCE / STATEMENT ────────────────────────────────
+function openBalance() {
+    const sym = STATE.isUSD ? 'USD' : 'PKR';
+    const avail = currentBalance();
+
+    document.getElementById('balDetailAvail').textContent  = sym + ' ' + fmt(avail);
+    document.getElementById('balDetailLedger').textContent = sym + ' ' + fmt(Math.round(avail * 1.015));
+    document.getElementById('balDetailCurr').textContent   = STATE.isUSD ? 'US Dollar (USD)' : 'Pakistani Rupee (PKR)';
+
+    const stmt = document.getElementById('miniStmt');
+    stmt.innerHTML = STATE.transactions.map(t =>
+        `<div class="stmt-item">
+            <span>${t.date} · ${t.desc}</span>
+            <span class="${t.type==='CR'?'credit':'debit'}">${t.type==='CR'?'+':'-'}${fmt(t.amount)}</span>
+        </div>`
+    ).join('');
+
+    nav('pg-balance');
+}
+
+// ── PROCESSING ANIMATION ───────────────────────────────
+function runProcessing(label, callback) {
+    nav('pg-processing');
+    document.getElementById('procLabel').textContent = label;
+    const bar = document.getElementById('progBar');
+    bar.style.width = '0%';
+
+    let pct = 0;
+    const iv = setInterval(() => {
+        pct += Math.random() * 12 + 4;
+        if (pct >= 100) {
+            pct = 100;
+            bar.style.width = '100%';
+            clearInterval(iv);
+            setTimeout(callback, 350);
+        } else {
+            bar.style.width = pct + '%';
+        }
+    }, 140);
+}
+
+// ── SUCCESS + RECEIPT ──────────────────────────────────
+function showSuccess(type, amount) {
+    document.getElementById('rcType').textContent = type;
+    document.getElementById('rcAmt').textContent  = 'PKR ' + fmt(amount);
+    document.getElementById('rcBal').textContent  = 'PKR ' + fmt(STATE.balance);
+    document.getElementById('rcRef').textContent  = 'TXN' + Date.now().toString().slice(-9).toUpperCase();
+    document.getElementById('rcTime').textContent = new Date().toLocaleString('en-PK');
+
+    // Update dashboard balance
+    counterAnimate(document.getElementById('balEl'), 0, currentBalance(), 600);
+    nav('pg-success');
+}
+
+// ── TRANSACTION LOG ────────────────────────────────────
+function addTxn(type, desc, amount) {
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const now = new Date();
+    STATE.transactions.unshift({ type, desc, amount, date: now.getDate() + ' ' + MONTHS[now.getMonth()] });
+    if (STATE.transactions.length > 10) STATE.transactions.pop();
+}
+
+// ── LOGOUT ─────────────────────────────────────────────
+function logout() {
+    STATE.loggedIn    = false;
+    STATE.pinBuffer   = '';
+    STATE.isUSD       = false;
+    clearTimeout(sessionTimer);
+    clearInterval(sessionInterval);
+
+    document.getElementById('currToggle').style.display  = 'none';
+    document.getElementById('sessionBadge').style.display = 'none';
+    document.getElementById('currSym').textContent       = 'PKR';
+    document.getElementById('currToggle').textContent    = 'PKR ⇄ USD';
+
+    nav('pg-welcome');
+}
+
+// ── SIDE BUTTONS ───────────────────────────────────────
+function sideBtn(id) {
+    const active = document.querySelector('.screen-page.active');
+    if (!active) return;
+
+    if (active.id === 'pg-welcome')   { onCardInsert(); return; }
+    if (active.id === 'pg-dashboard') {
+        const map = { l0:'pg-withdraw', l1:'pg-deposit', r0:'pg-transfer' };
+        if (map[id]) nav(map[id]);
+        if (id === 'r1') openBalance();
+    }
+}
+
+// ── INIT ───────────────────────────────────────────────
+document.getElementById('balEl').textContent = fmt(STATE.balance);
+</script>
+</body>
+</html>
